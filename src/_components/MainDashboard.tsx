@@ -9,21 +9,23 @@ import TransactionRow from "./TransactionRow";
 import Loading from "./Loading";
 import NoData from "./NoData";
 import { useEffect, useState } from "react";
+import type {
+  DashboardSummary,
+  SortDirection,
+  SortField,
+  Tab,
+  Transaction,
+} from "@/_lib/types";
 
-type Tab = "Overview" | "Transactions";
-type SortField = "date" | "remark" | "amount";
-type SortDirection = "asc" | "desc";
+type MainDashboardProps = {
+  isSidebarOpen: boolean;
+  toggleSidebar: () => void;
+};
 
-interface Transaction {
-  id: string;
-  date: string;
-  remark: string;
-  amount: number;
-  currency: string;
-  type: "Credit" | "Debit";
-}
-
-const MainDashboard = () => {
+const MainDashboard = ({
+  isSidebarOpen,
+  toggleSidebar,
+}: MainDashboardProps) => {
   const transactions: Transaction[] = [
     {
       id: "1",
@@ -99,6 +101,17 @@ const MainDashboard = () => {
     },
   ];
 
+  const summary: DashboardSummary = {
+    totalBalance: 12345,
+    totalCredits: 7890,
+    totalDebits: 4455,
+    transactionCount: 150,
+    balanceChange: 5,
+    creditsChange: 3,
+    debitsChange: -2,
+    transactionChange: 10,
+  };
+
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>("Overview");
   const [sortField, setSortField] = useState<SortField>("date");
@@ -140,10 +153,19 @@ const MainDashboard = () => {
 
   return (
     <section className="p-4 md:p-10 flex flex-col md:flex-row gap-6 md:gap-10">
-      <aside>
-        <nav>
-          <ul className="flex md:flex-col gap-2">
-            <li className="w-full md:w-[320px] h-9 bg-[#38677629] text-[#3A6C7B] rounded-2xl px-4 py-1.5 font-medium text-[15px]">
+      <aside
+        className={`
+    fixed z-50 top-0 left-0 h-full bg-white shadow-lg transition-transform duration-300 ease-in-out
+    w-64 md:static md:shadow-none md:translate-x-0
+    ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"}
+  `}
+      >
+        <nav className="p-4">
+          <button className="md:hidden mb-4" onClick={toggleSidebar}>
+            Close ✖
+          </button>
+          <ul className="flex flex-col gap-2">
+            <li className="w-full h-9 bg-[#38677629] text-[#3A6C7B] rounded-2xl px-4 py-1.5 font-medium text-[15px]">
               Dashboard
             </li>
             <li className="pl-2 text-[#1B2528] font-medium text-[15px]">
@@ -190,7 +212,7 @@ const MainDashboard = () => {
                 width={32}
                 height={32}
                 alt="Avatar"
-                className="rounded-full border-[1.5px] border-transparent"
+                className="rounded-full ring-2 ring-white"
               />
             ))}
           </div>
@@ -206,10 +228,10 @@ const MainDashboard = () => {
               <button
                 key={tab}
                 onClick={() => handleTabChange(tab as Tab)}
-                className={`pb-2 ${
+                className={`pb-2  font-medium text-[15px] font-psans ${
                   activeTab === tab
-                    ? "border-b-2 border-black font-semibold"
-                    : "text-gray-500"
+                    ? "border-b-2 border-[#437D8E] text-[#437D8E]"
+                    : "text-[#15272D9E]"
                 }`}
               >
                 {tab}
@@ -221,11 +243,35 @@ const MainDashboard = () => {
         {/* Summary */}
         <div className="mt-8">
           <h2 className="font-bold text-xl md:text-2xl mb-4">Summary</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-            <SummaryCard title="Total Balance" value="$12,345" change="+5%" />
-            <SummaryCard title="Total Credits" value="$7,890" change="+3%" />
-            <SummaryCard title="Total Debits" value="$4,455" change="-2%" />
-            <SummaryCard title="Transactions" value="150" change="+10%" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            <SummaryCard
+              title="Total Balance"
+              value={`$${summary.totalBalance.toLocaleString()}`}
+              change={`${summary.balanceChange >= 0 ? "+" : ""}${
+                summary.balanceChange
+              }%`}
+            />
+            <SummaryCard
+              title="Total Credits"
+              value={`$${summary.totalCredits.toLocaleString()}`}
+              change={`${summary.creditsChange >= 0 ? "+" : ""}${
+                summary.creditsChange
+              }%`}
+            />
+            <SummaryCard
+              title="Total Debits"
+              value={`$${summary.totalDebits.toLocaleString()}`}
+              change={`${summary.debitsChange >= 0 ? "+" : ""}${
+                summary.debitsChange
+              }%`}
+            />
+            <SummaryCard
+              title="Transactions"
+              value={summary.transactionCount.toLocaleString()}
+              change={`${summary.transactionChange >= 0 ? "+" : ""}${
+                summary.transactionChange
+              }%`}
+            />
           </div>
         </div>
 
@@ -236,7 +282,7 @@ const MainDashboard = () => {
               <tr>
                 <th
                   onClick={() => handleSort("date")}
-                  className="cursor-pointer px-2 py-2"
+                  className="cursor-pointer px-2 py-2 font-psans font-medium text-[13px] text-[#15272D9E]"
                 >
                   Date{" "}
                   {sortField === "date" &&
@@ -244,22 +290,22 @@ const MainDashboard = () => {
                 </th>
                 <th
                   onClick={() => handleSort("remark")}
-                  className="cursor-pointer px-2 py-2"
+                  className="cursor-pointer px-2 py-2 font-psans font-medium text-[13px] text-[#15272D9E]"
                 >
-                  Remark{" "}
-                  {sortField === "remark" &&
-                    (sortDirection === "asc" ? "▲" : "▼")}
+                  Remark {sortDirection === "asc" ? "▲" : "▼"}
                 </th>
                 <th
                   onClick={() => handleSort("amount")}
-                  className="cursor-pointer px-2 py-2"
+                  className="cursor-pointer px-2 py-2 font-psans font-medium text-[13px] text-[#15272D9E]"
                 >
-                  Amount{" "}
-                  {sortField === "amount" &&
-                    (sortDirection === "asc" ? "▲" : "▼")}
+                  Amount {sortDirection === "asc" ? "▲" : "▼"}
                 </th>
-                <th className="px-2 py-2">Currency</th>
-                <th className="px-2 py-2">Type</th>
+                <th className="px-2 py-2 font-psans font-medium text-[13px] text-[#15272D9E]">
+                  Currency {sortDirection === "asc" ? "▲" : "▼"}
+                </th>
+                <th className="px-2 py-2 font-psans font-medium text-[13px] text-[#15272D9E]">
+                  Type {sortDirection === "asc" ? "▲" : "▼"}
+                </th>
               </tr>
             </thead>
             <tbody>
