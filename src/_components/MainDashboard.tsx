@@ -152,7 +152,7 @@ const MainDashboard = ({
   }, []);
 
   return (
-    <section className="p-4 md:p-10 flex flex-col md:flex-row gap-6 md:gap-10">
+    <section className="p-4 md:p-10 flex flex-col md:flex-row gap-6 md:gap-10 font-psans">
       <aside
         className={`
     fixed z-50 top-0 left-0 h-full bg-white shadow-lg transition-transform duration-300 ease-in-out
